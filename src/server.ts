@@ -3,12 +3,15 @@ import express, {
   type Request,
   type Response,
 } from "express";
-import { Pool } from "pg";
+import { Pool, Query } from "pg";
 const app: Application = express();
 const port = 3000;
+
+//information from config files
+import config from "./config/config";
+
 const pool = new Pool({
-  connectionString:
-    "postgresql://neondb_owner:npg_WhITQRUbz19C@ep-silent-surf-atgbsf0j-pooler.c-9.us-east-1.aws.neon.tech/neondb?sslmode=verify-full&channel_binding=require",
+  connectionString: config.db_url,
 });
 
 // creating table
@@ -64,6 +67,103 @@ app.post("/", async (req: Request, res: Response) => {
     res.status(505).json({
       message: error.message,
       error: error,
+    });
+  }
+});
+
+// app.get for all user
+
+app.get("/api/users", async (req: Request, res: Response) => {
+  try {
+    const result = await pool.query(`SELECT * FROM users`);
+    res.status(200).json({
+      success: true,
+      message: "Users retrieved successfully",
+      data: result.rows,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+      error: error,
+    });
+  }
+});
+
+//app.get for single users
+
+app.get("/api/users/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    console.log("The id is", id);
+    const result = await pool.query("SELECT * FROM users WHERE id=$1", [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `User with id ${id} not found `,
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "User fetched successfully",
+      data: result.rows[0],
+    });
+  } catch (error) {
+    res.status(505).json({
+      success: false,
+      message: "Failed to fetch user",
+      Error: error,
+    });
+  }
+});
+
+app.put("/api/users/:id", async (req: Request, res: Response) => {
+  const query = `UPDATE users 
+      SET name=COALESCE($1,name),
+      email=COALESCE($2,email),
+      password=COALESCE($3,password),
+      age=COALESCE($4,age),
+      is_active=COALESCE($5,is_active),
+      updated_at=NOW()
+      WHERE id=$6
+      RETURNING *`;
+
+  try {
+    const { id } = req.params;
+    const { name, email, password, age, is_active } = req.body;
+    const result = await pool.query(query, [
+      name,
+      email,
+      password,
+      age,
+      is_active,
+      id,
+    ]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `User with id ${id} not found `,
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      data: result.rows[0],
+    });
+  } catch (error: any) {
+    if (error.position) {
+      const pos = parseInt(error.position, 10);
+      const start = Math.max(0, pos - 20);
+      const end = pos + 20;
+      console.error("❌ SQL Error near:", query.slice(start, end));
+      console.error("👉 Exact character:", query[pos - 1]);
+    }
+    console.error("Full error:", error.message, "| Code:", error.code);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update user",
+      Error: error.detail || error.code,
     });
   }
 });
