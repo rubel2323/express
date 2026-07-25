@@ -9,10 +9,14 @@ const app: Application = express();
 //information from config files
 import config from "./config/config";
 import { initDB, pool } from "./db";
+import { userRoute } from "./modules/user/user.router";
 
 app.use(express.json());
 app.use(express.text());
 app.use(express.urlencoded({ extended: true }));
+
+//middleware with neonDb and server
+app.use("/api/users/", userRoute);
 
 app.get("/", (req: Request, res: Response) => {
   // res.send("Hello World!");
