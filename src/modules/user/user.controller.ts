@@ -37,4 +37,29 @@ const getAllUser = async (req: Request, res: Response) => {
     });
   }
 };
-export const userController = { createUser, getAllUser };
+
+const getSingleUser = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const result = await userService.getSingleUserFromDB(id as string);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `User with id ${id} not found `,
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "User fetched successfully",
+      data: result.rows[0],
+    });
+  } catch (error) {
+    res.status(505).json({
+      success: false,
+      message: "Failed to fetch user",
+      Error: error,
+    });
+  }
+};
+export const userController = { createUser, getAllUser, getSingleUser };
