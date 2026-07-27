@@ -18,33 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 //middleware with neonDb and server
 app.use("/api/users/", userRoute);
 
-app.get("/", (req: Request, res: Response) => {
-  // res.send("Hello World!");
-  res.status(200).json({
-    message: "This is Express server",
-    author: "Next Level",
-    version: "2.0.12",
-  });
-});
-
 // app.get for all user
-
-app.get("/api/users", async (req: Request, res: Response) => {
-  try {
-    const result = await pool.query(`SELECT * FROM users`);
-    res.status(200).json({
-      success: true,
-      message: "Users retrieved successfully",
-      data: result.rows,
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-      error: error,
-    });
-  }
-});
 
 //app.get for single users
 
