@@ -62,4 +62,62 @@ const getSingleUser = async (req: Request, res: Response) => {
     });
   }
 };
-export const userController = { createUser, getAllUser, getSingleUser };
+
+const updateUser = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    // const { name, email, password, age, is_active } = req.body;
+    const result = await userService.updateUserFromDb(req.body, id as string);
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `User with id ${id} not found `,
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      data: result.rows[0],
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to update user",
+      Error: error.detail || error.code,
+    });
+  }
+};
+
+const deleteUser = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const result = await userService.deleteUserFromDb(id as string);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `User with id ${id} not found `,
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "User deleted successfully",
+      data: result.rows[0],
+    });
+  } catch (error: unknown) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete user",
+      Error: error instanceof Error ? error.message : String(error),
+    });
+  }
+};
+
+export const userController = {
+  createUser,
+  getAllUser,
+  getSingleUser,
+  updateUser,
+  deleteUser,
+};
