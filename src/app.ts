@@ -18,6 +18,6 @@ app.use(express.urlencoded({ extended: true }));
 
 //middleware with neonDb and server
 app.use("/api/users/", userRoute);
-app.use("/api/users/", profileRoute);
+app.use("/api/profile/", profileRoute);
 
 export default app;
